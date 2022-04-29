@@ -549,7 +549,7 @@ HighsStatus writeModelAsMps(const HighsOptions& options,
   HighsInt max_col_name_length = kHighsIInf;
   if (!free_format) max_col_name_length = 8;
   HighsStatus col_name_status =
-      normaliseNames(options.log_options, "Column", lp.num_col_,
+      normaliseNames(options.log_options, "column", lp.num_col_,
                      local_col_names, max_col_name_length);
   if (col_name_status == HighsStatus::kError) return col_name_status;
   warning_found = col_name_status == HighsStatus::kWarning || warning_found;
@@ -558,7 +558,7 @@ HighsStatus writeModelAsMps(const HighsOptions& options,
   HighsInt max_row_name_length = kHighsIInf;
   if (!free_format) max_row_name_length = 8;
   HighsStatus row_name_status =
-      normaliseNames(options.log_options, "Row", lp.num_row_, local_row_names,
+      normaliseNames(options.log_options, "row", lp.num_row_, local_row_names,
                      max_row_name_length);
   if (row_name_status == HighsStatus::kError) return col_name_status;
   warning_found = row_name_status == HighsStatus::kWarning || warning_found;
@@ -780,16 +780,14 @@ HighsStatus writeMps(
         fprintf(file,
                 "    MARK%04" HIGHSINT_FORMAT
                 "  'MARKER'                 'INTORG'\n",
-                nIntegerMk);
-        nIntegerMk++;
+                nIntegerMk++);
         integerFg = true;
       } else if (integrality[c_n] != HighsVarType::kInteger && integerFg) {
         // End an integer section
         fprintf(file,
                 "    MARK%04" HIGHSINT_FORMAT
                 "  'MARKER'                 'INTEND'\n",
-                nIntegerMk);
-        nIntegerMk++;
+                nIntegerMk++);
         integerFg = false;
       }
     }
@@ -804,6 +802,12 @@ HighsStatus writeMps(
               row_names[r_n].c_str(), v);
     }
   }
+  // End any integer section
+  if (integerFg)
+    fprintf(file,
+            "    MARK%04" HIGHSINT_FORMAT
+            "  'MARKER'                 'INTEND'\n",
+            nIntegerMk++);
   have_rhs = true;
   if (have_rhs) {
     fprintf(file, "RHS\n");
@@ -844,7 +848,7 @@ HighsStatus writeMps(
           // Column would have a bound to report
           num_zero_no_cost_columns_in_bounds_section++;
         }
-        if (write_zero_no_cost_columns) continue;
+        if (!write_zero_no_cost_columns) continue;
       }
       if (lb == ub) {
         // Equal lower and upper bounds: Fixed

@@ -85,24 +85,36 @@ FilereaderRetcode FilereaderLp::readModelFromFile(const HighsOptions& options,
         mat2[qt->var1].push_back(qt->coef);
       }
     }
-    hessian.dim_ = m.variables.size();
 
+    // Determine whether there is a Hessian to set up by counting its
+    // nonzero entries
     unsigned int qnnz = 0;
-    // model_.hessian_ is initialised with start_[0] for fictitious
-    // column 0, so have to clear this before pushing back start
-    hessian.start_.clear();
-    assert((int)hessian.start_.size() == 0);
-    for (std::shared_ptr<Variable> var : m.variables) {
-      hessian.start_.push_back(qnnz);
-
-      for (unsigned int i = 0; i < mat[var].size(); i++) {
-        hessian.index_.push_back(varindex[mat[var][i]->name]);
-        hessian.value_.push_back(mat2[var][i]);
-        qnnz++;
+    for (std::shared_ptr<Variable> var : m.variables)
+      for (unsigned int i = 0; i < mat[var].size(); i++)
+        if (mat2[var][i]) qnnz++;
+    if (qnnz) {
+      hessian.dim_ = m.variables.size();
+      qnnz = 0;
+      // model_.hessian_ is initialised with start_[0] for fictitious
+      // column 0, so have to clear this before pushing back start
+      hessian.start_.clear();
+      assert((int)hessian.start_.size() == 0);
+      for (std::shared_ptr<Variable> var : m.variables) {
+        hessian.start_.push_back(qnnz);
+        for (unsigned int i = 0; i < mat[var].size(); i++) {
+          double value = mat2[var][i];
+          if (value) {
+            hessian.index_.push_back(varindex[mat[var][i]->name]);
+            hessian.value_.push_back(value);
+            qnnz++;
+          }
+        }
       }
+      hessian.start_.push_back(qnnz);
+      hessian.format_ = HessianFormat::kSquare;
+    } else {
+      assert(hessian.dim_ == 0 && hessian.start_[0] == 0);
     }
-    hessian.start_.push_back(qnnz);
-    hessian.format_ = HessianFormat::kSquare;
 
     // handle constraints
     std::map<std::shared_ptr<Variable>, std::vector<unsigned int>>
@@ -133,9 +145,12 @@ FilereaderRetcode FilereaderLp::readModelFromFile(const HighsOptions& options,
       std::shared_ptr<Variable> var = m.variables[i];
       lp.a_matrix_.start_.push_back(nz);
       for (HighsUInt j = 0; j < consofvarmap_index[var].size(); j++) {
-        lp.a_matrix_.index_.push_back(consofvarmap_index[var][j]);
-        lp.a_matrix_.value_.push_back(consofvarmap_value[var][j]);
-        nz++;
+        double value = consofvarmap_value[var][j];
+        if (value) {
+          lp.a_matrix_.index_.push_back(consofvarmap_index[var][j]);
+          lp.a_matrix_.value_.push_back(value);
+          nz++;
+        }
       }
     }
     lp.a_matrix_.start_.push_back(nz);
@@ -196,8 +211,10 @@ HighsStatus FilereaderLp::writeModelToFile(const HighsOptions& options,
   this->writeToFileLineend(file);
   this->writeToFile(file, " obj: ");
   for (HighsInt i = 0; i < lp.num_col_; i++) {
-    this->writeToFile(file, "%+g x%" HIGHSINT_FORMAT " ", lp.col_cost_[i],
-                      (i + 1));
+    double coef = lp.col_cost_[i];
+    if (coef != 0.0) {
+      this->writeToFile(file, "%+g x%" HIGHSINT_FORMAT " ", coef, (i + 1));
+    }
   }
   if (model.isQp()) {
     this->writeToFile(file, "+ [ ");
@@ -205,9 +222,15 @@ HighsStatus FilereaderLp::writeModelToFile(const HighsOptions& options,
       for (HighsInt i = model.hessian_.start_[col];
            i < model.hessian_.start_[col + 1]; i++) {
         if (col <= model.hessian_.index_[i]) {
-          this->writeToFile(
-              file, "%+g x%" HIGHSINT_FORMAT " * x%" HIGHSINT_FORMAT " ",
-              model.hessian_.value_[i], col, model.hessian_.index_[i]);
+          double coef = model.hessian_.value_[i];
+          if (col != model.hessian_.index_[i]) {
+            coef *= 2;
+          }
+          if (coef != 0.0) {
+            this->writeToFile(
+                file, "%+g x%" HIGHSINT_FORMAT " * x%" HIGHSINT_FORMAT " ",
+                coef, col, model.hessian_.index_[i]);
+          }
         }
       }
     }
