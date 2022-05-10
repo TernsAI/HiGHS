@@ -456,8 +456,17 @@ add_library(libhighs)
 if (NOT ${BUILD_SHARED_LIBS})
     set_target_properties(libhighs PROPERTIES POSITION_INDEPENDENT_CODE ON)
     target_compile_definitions(libhighs PUBLIC LIBHIGHS_STATIC_DEFINE)
-elseif(MINGW)
-    target_compile_definitions(libhighs PUBLIC LIBHIGHS_STATIC_DEFINE)
+endif()
+
+if(${BUILD_SHARED_LIBS})
+    # put version information into shared library file
+    set_target_properties(libhighs PROPERTIES
+        VERSION
+        ${HIGHS_VERSION_MAJOR}.${HIGHS_VERSION_MINOR}.${HIGHS_VERSION_PATCH}
+        SOVERSION ${HIGHS_VERSION_MAJOR}.${HIGHS_VERSION_MINOR})
+    if(MINGW)
+        target_compile_definitions(libhighs PUBLIC LIBHIGHS_STATIC_DEFINE)
+    endif()
 endif()
 
 target_sources(libhighs PRIVATE
