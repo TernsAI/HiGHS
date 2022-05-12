@@ -298,7 +298,6 @@ if(NOT MSVC)
 
     if(PKG_CONFIG_FOUND)
         pkg_check_modules(OSI osi)
-        set(OSI_FOUND OFF)
         if (OSI_FOUND)
             # need to come before adding any targets (add_executable, add_library)
             link_directories(${OSI_LIBRARY_DIRS})
