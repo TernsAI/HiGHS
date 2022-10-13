@@ -2,6 +2,8 @@
 
 #include "builder.hpp"
 
+#include "string.h"
+
 #include <cassert>
 #include <iostream>
 #include <fstream>
