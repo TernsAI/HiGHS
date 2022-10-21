@@ -1,8 +1,8 @@
 FROM eclipse-temurin:17
 
-RUN sudo apt-get update
-RUN sudo apt-get install unzip
-RUN sudo apt-get install cmake>3.21.3-r0
+RUN apt-get update
+RUN apt-get install unzip
+RUN apt-get install cmake>3.21.3-r0
 #        apk upgrade && \
 #        apk add --no-cache \
 #            cmake>3.21.3-r0 \
