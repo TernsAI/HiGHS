@@ -2,9 +2,7 @@ name: Build and Push Image on ECR
 
 on:
   push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+    branches: [ master, conversion-to-ubuntu ]
 
 env:
   AWS_REGION: eu-west-1
