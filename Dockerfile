@@ -1,13 +1,13 @@
-FROM eclipse-temurin:17-alpine
+FROM eclipse-temurin:17
 
-RUN apk update && \
-        apk upgrade && \
-        apk add --no-cache \
-            cmake>3.21.3-r0 \
-            make \
-            g++ \
-            gcc \
-            git
+#RUN apk update && \
+#        apk upgrade && \
+#        apk add --no-cache \
+#            cmake>3.21.3-r0 \
+#            make \
+#            g++ \
+#            gcc \
+#            git
 
 ADD /HiGHS.zip /
 RUN unzip HiGHS.zip -d /HiGHS
