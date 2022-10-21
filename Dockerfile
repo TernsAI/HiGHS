@@ -1,15 +1,11 @@
 FROM eclipse-temurin:17
 
 RUN apt-get update
+RUN apt-get install build-essential
 RUN apt-get install unzip
+RUN apt-get install git
+RUN wget -O - https://github.com/Kitware/CMake/releases/download/v3.25.0-rc2/cmake-3.25.0-rc2-linux-x86_64.sh | bash
 RUN apt-get install cmake>3.21.3-r0
-#        apk upgrade && \
-#        apk add --no-cache \
-#            cmake>3.21.3-r0 \
-#            make \
-#            g++ \
-#            gcc \
-#            git
 
 ADD /HiGHS.zip /
 RUN unzip HiGHS.zip -d /HiGHS
